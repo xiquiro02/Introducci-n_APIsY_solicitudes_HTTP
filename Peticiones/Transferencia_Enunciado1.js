@@ -1,60 +1,41 @@
-/* Enunciado 1: (Usuarios activos y sus publicaciones)
-    Una aplicación web requiere mostrar un listado de usuarios activos junto con la cantidad
-    de publicaciones que han realizado. Sin embargo, no todos los usuarios han creado
-    publicaciones. El sistema debe identificar correctamente estos casos.
-    Requerimientos
-    • Consultar la lista completa de usuarios.
-    • Consultar la lista de publicaciones.
-    • Identificar cuáles usuarios tienen publicaciones asociadas.
-    • Calcular la cantidad de publicaciones por usuario.
-    • Mostrar también los usuarios que no tienen publicaciones.
-    Datos de entrada
-    • Endpoint de usuarios (users).
-    • Endpoint de publicaciones (posts).
-    • Identificador del usuario (userId)
-    Datos de salida
-    • Listado de usuarios con:
-    o Nombre del usuario
-    o Cantidad de publicaciones asociadas (puede ser 0) */
-
-
-const UsuariosActivosYPublicaciones = async () => {
-    // Consultar todos los usuarios
-    const respuestaUsuarios = await fetch('http://localhost:8000/users');
-    const usuarios = await respuestaUsuarios.json();
-    
-    // Consultar todas las publicaciones
-    const respuestaPosts = await fetch('http://localhost:8000/posts');
-    const posts = await respuestaPosts.json();
-    
-    console.log("Usuarios y sus publicaciones\n");
-    
-    // Recorrer cada usuario
-    for (let i = 0; i < usuarios.length; i++) 
-    {
-        // Verificar si el usuario está activo
-        if (usuarios[i].active === true)
-        {
-            let contador = 0;
-            // Contar cuántos posts tiene este usuario
-            for (let j = 0; j < posts.length; j++) 
-            {
-                if (posts[j].userId == usuarios[i].id) 
-                {
-                    contador++;
-                }
-            }
-            // Imprimir resultado
-            if (contador > 0)
-            {
-                console.log(`Usuario: ${usuarios[i].name}`);
-                console.log(`Activo: True`);
-                console.log(`Publicaciones: ${contador}`);
-                console.log("\n");
-                
-            }
-        }
-    }
+// Función asíncrona que obtiene la lista de los usuarios
+const usuarios = async () => {
+    // Se realiza una consulta al endpoint de usuarios usando fetch
+    const respuestaUser = await fetch('http://localhost:8000/users');
+    // Se convierte a formato JSON y devuelve un arreglo con la información de los usuarios
+    return await respuestaUser.json();
+}
+// Función asíncrona que obtiene los post de un usuario
+const postUsuarios = async (id) => {
+    // Se realiza una consulta al endpoint de los posts de un usuario en específico por medio del id usando fetch
+    const respuestaPost = await fetch(`http://localhost:8000/posts?userId=${id}`);
+    // Se convierte a formato JSON y devuelve un arreglo de los post del usuario
+    return await respuestaPost.json();
 }
 
-UsuariosActivosYPublicaciones();
+// Llama a la función usuarios 
+usuarios()
+.then((usuario) => 
+{
+    // Se inicializa una constante que se le asigna con un arreglo vacío para guardar el resultado final
+    const resultados = [];
+    // recorre el arreglo de los usuarios
+    usuario.map(({id, name}) => 
+    {
+        // Llama a la función postUsuarios la cual obtiene los post de cada usuario por medio del id
+        postUsuarios(id)
+        .then((post) => {
+            // En el arreglo resultados se guarda el nombre del usuario y la cantidad de posts que tiene
+            resultados.push({
+                nombre : name,
+                CantidadPosts: post.length 
+            });
+            // Condición que compara si la cantidad de resultados es igual a la cantidad total de usuarios
+            if(resultados.length === usuario.length)
+            {
+                // Imprime el nombre del usuario y la cantidad de posts
+                console.log(resultados);
+            }
+        })
+    })
+})
